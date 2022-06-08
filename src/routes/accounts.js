@@ -655,14 +655,6 @@ module.exports = function (app, middleware, controllers) {
 
 	setupPageRoute(
 		app,
-		'/applicant/storyboard/:tid',
-		middleware,
-		middlewares,
-		controllers.dtthon.applicant_storyboard.get
-	);
-
-	setupPageRoute(
-		app,
 		'/creator/dashboard',
 		middleware,
 		middlewares,
