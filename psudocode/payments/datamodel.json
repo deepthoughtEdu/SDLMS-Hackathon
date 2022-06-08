@@ -1,0 +1,434 @@
+
+********************************************************************
+4 levels of privileges over a module:
+1. viewer
+2. customer(who purchased)
+3. lister (one who listed it/ will get the mony)
+4. creator (who built it)
+********************************************************************
+
+*************************************************************
+
+cocredDetails = { //transactionrecord
+    status:``, //locked, unlocked (a semaphore variable ) i.e. can modify cocredBalance or not ? (used in purchasing module, as solution over concarancy problem)
+    cocredBalance: ,
+    
+    uid:``,
+    updatedUID: '',
+    creatorUID: '', //!2 when parent first time opens, and does top up for child, childs wallet will get created(with his uid), but creatorUID will be parent, right?
+    created: '', // timestamp epoch ts:timestamp
+    lastUpdated: '', // timestamp epoch
+
+    asOfDate:'', // date of last update
+    transactions: [
+        {
+            timestamp: '',
+            amount: '',
+            type: 'debit', 
+            reference: '', // purchaseOrderID  
+        },
+        {
+            timestamp: '',
+            amount: '',
+            type: 'cocred', 
+            reference: '', // cocredOrderID
+        }
+    ],
+}
+
+*************************************************************
+
+cocredOrder = { //cocredOrder, used for generating invoice
+    cocredOrderID:'',
+    productID:'',
+    quantity:'',
+    amount:'', //! amount in rupees, the total amount paid against this order
+    
+    razorpayOrderID:'', //! later renamed as orderID
+    razorpayPaymentID:'', //! later renamed as paymentID
+    
+    status:'', //pending, completed, failed
+    error:'',
+
+    uid: '',
+    //?2 when parent does top-up for child, creator of order is parent, but owner is child (uid will be his one)
+    creatorUID:'',
+    updatedUID: '',
+    lastUpdated: '', // timestamp epoch
+    created:'' //when created
+}
+
+*************************************************************
+
+// order for a module that is NOT subscription
+modulePurchaseOrder = {
+    purchaseOrderID:'',
+     moduleID: '',
+     priceListID: '',
+     cocreds: '',
+     purchaseDate: '',
+    //  status: '', // 'active' or 'expired'
+    // //!!!? why need to have status? expiry can tell us what is actual status
+    // //!!!? it will need one more scheduler, to each day check and change these statuses :( 
+     expiry: '', //timestamp epoch
+     
+    uid: '',
+    //!4 if parent is purchasing module for child, then uid will be of child, and creatorUID will be of parent, right?
+    //!5 and uid will be used to verify child while entering into the module
+    creatorUID: '',
+    updatedUID: '',
+    lastUpdated: '', // timestamp epoch
+    created: '', // timestamp epoch
+}
+// order for a subscription Module
+modulePurchaseOrder = {
+    purchaseOrderID:'',
+     moduleID: '',
+     priceListID: '',
+     cocreds: '',
+     purchaseDate: '',
+     
+     
+    uid: '',
+    creatorUID: '',
+    updatedUID: '',
+    lastUpdated: '', // timestamp epoch
+    created: '', // timestamp epoch
+
+    duration: '', //in days, total duration, like btech: 4 yrs(4*365), mtech: 3 yrs, etc
+    subscriptionTime: '',// time in units of subscriptionTimeUnits, representing one cycle
+    subscriptionTimeUnit: '', // day/week/month/year
+    subscriptionCocreds: '', //cocreds per each cycle
+    //* this can be an array as well, if each subscription has different fees, this feature to be implemented, datamodal is designed accordingly !
+    invoices: [
+        {
+            invoiceOrderID: '',
+            invoiceDate: '', // date at which invoice is due, timestamp epoch
+            cocreds: '',
+            status: '', // 'paid' or 'pending'
+            paydDate: '',
+        }
+    ],
+}
+
+**************************************************************
+// for a module that is NOT subscription
+ module = {
+    name: "",
+    description: "",
+    image: {},
+    curriculum: {}, // this is where full module will be sitting or, somewhere else?
+    status: "", //active, inactive, dead
+    moduleID : "", //unique id of module
+    moduleType: "", //module, course, project, anything we can sell...
+
+    ownerUid:'', //!3 maybee creator is some teacher, and owner is the organisation ?
+    creatorUID: '',
+    updatedUID: '',
+    lastUpdated: '', // timestamp epoch
+    created: '', // timestamp epoch
+    
+    duration: '', // in days, the days for which module will last after purchasing, i.e. it's lifetime once purchased
+}
+
+// module of type subscription
+ module = {
+    name: "",
+    description: "",
+    image: {},
+    curriculum: {}, // this is where full module will be sitting or, somewhere else?
+    status: "", //active, inactive, dead
+    moduleID : "", //unique id of module
+    moduleType: "", //module, course, project, anything we can sell...
+
+    ownerUid:'', //!3 maybee creator is some teacher, and owner is the organisation ?
+    creatorUID: '',
+    updatedUID: '',
+    lastUpdated: '', // timestamp epoch
+    created: '', // timestamp epoch
+    
+    duration: '', //in days, Btech:4 years, Mtech:2 years, PhD:1 year...
+    subscriptionTime: '', //in subscriptionTimeUnits , it is time period u pay for subscription
+    subscriptionTimeUnit: '', //days, weeks, months, years
+}
+**************************************************************************************
+example for invoice time entries:
+if duration is 356(days)
+and subscriptionTimeUnit is "month"
+and subscriptionTime is 4(month)
+then:
+he will pay 3 times, once in each 4 months
+3 invoices will be generated
+it is 4-monthly subscription for an yearlong running cource
+**************************************************************************************
+
+priceList={
+        priceListID: '',
+        moduleID: '',
+        cocreds: '',
+        endDate: '', //timestamp epoch
+        startDate: '', //timestamp epoch
+        moduleDuration: '', //in days
+        //module's duration after which it will xpire
+
+        creatorUID: '',
+        //?6 why creatorUID should b here ? module already has it, and this is just the catelogue
+        //?7 wont this object get autogenerated as we create module ?
+        updatedUID: '',
+        lastUpdated: '', // timestamp epoch
+        created: '', // timestamp epoch
+
+        //if module is subscription
+        
+    }
+
+    //IF sbuscription
+priceList={
+        priceListID: '',
+        moduleID: '',
+        cocreds: '',
+        end_date: '', //timestamp epoch
+        start_date: '', //timestamp epoch
+        
+        creatorUID: '',
+        //?6 why creatorUID should b here ? module already has it, and this is just the catelogue
+        //?7 wont this object get autogenerated as we create module ?
+        updatedUID: '',
+        lastUpdated: '', // timestamp epoch
+        created: '', // timestamp epoch
+        
+        duration: '', //in days
+        // total time of cource( for BTech. 4 yrs) or subscriptive module
+        subscriptionTime: '', //in subscriptionTimeUnits , it is time period u pay for subscription
+        subscriptionTimeUnit: '', //DAY, WEEK, MONTH, YEAR
+        subscriptionCocreds: '', //cocreds for subscription
+    }
+
+    subscriptionTimeUnit: {
+        DAY: 86400000000,
+        WEEK: 604800000000,
+        MONTH: 2592000000000,
+        YEAR: 31536000000000
+    }
+    
+**************************************************************************************
+
+cocredProduct={
+    productID:'',
+    productName: "super300",
+    amount:'', // in rupees
+    cocredsOffered:'', //?1 maybee each card has its own ratio of price to cocreds, is this ok ?
+    status:'', // active, inactive
+
+    creatorUID: '',
+    updatedUID: '',
+    lastUpdated: '', // timestamp epoch
+    created: '', // timestamp epoch
+}
+
+
+
+When user logs inn:
+0. create cocredDetails object in cocredDetails collection
+1. search for cocredDetails object in cocredDetails collection for user (not found then create)
+
+
+----------------------------------------
+
+When he makes purchase of cocreds: (inputs: user logged inn, valid cocred product)
+0. validate cocred product and logged inn user. throw error if not...
+1 make cocredOrder object store in cocredOrders collection
+2. make razorpay order 
+3. send orderID to frontend 
+(? what if process is interupted after here, as order and cocredOrder objects have been already created in Db, we hav to clean them)
+4. use orderID in frontend and triger payment 
+
+on success payment(when a success payment hook from razorpay trigers out):
+5. process cocred transaction 
+
+on failure payment(when a failure payment hook from razorpay trigers out):
+5. update cocredOrder object with razorpay paymentID, status = failed, timestamp...
+
+on no hook trigers from razorpay in 10 mins. ( payment timed out...) :
+//? how to handle this thing?
+
+-------------------------------------
+
+when user spends cocreds and purchases module:
+1. get debit amount as the module price found in priceList collection
+2. process debit transaction with this amount
+
+-------------------------------------
+
+
+process debit the transaction :
+#. valiadte balance of user in cocredDetails , against the debit amount
+#. if not found enough balance & unlock it and throw the error
+#. create purchase object in purchases with all data fields in purchaces
+##. push this debit transaction in cocredDetails of user in cocredDetails collection
+##. decrease cocredDetails's cocred balance and unlock it
+
+process cocred the transaction :
+#. update cocredOrder object with razorpay orderID, status = success, timestamp... 
+##. push the cocred transaction to cocredDetails of user in cocredDetails collection
+##. increment cocredDetails's cocred balance and unlock it.
+
+------------------------
+
+cocredDetails collection funtionalty:
+1. get cocredDetails of user (full array or just balance or both as per needs)
+2. create cocredDetails of user
+3. push transaction in cocredDetails of user 
+4. lock/unlock cocredBalance of user cocredDetails
+
+
+modules funtionalty:
+1. CRUD for module 
+
+purchaces funtionalty:
+1. create a purchase object for a perticular perchase 
+2. set expired/active = false when needed (or, just remove document?)
+3. get all active/unexpired purchases of a user, also get expired purchases 
+4. check is user having perticular module in active state 
+
+razorpayData funtionalty:
+1. dump order and payment objects 
+2. get order and payment objects for orderID and payID 
+
+cocredOrders funtionalty:
+1. create cocredOrder object with razorpay orderID 
+2. update cocredOrder object with razorpay paymentID, status = success, timestamp...
+3. get cocredOrder object for orderID
+
+
+//*----------------------------------------------------
+//# cocredProducts collection
+{
+    productID: "product:1",
+    price: 300, 
+    status: "active",
+    creatorUID: 1,
+    updatedUID: null,
+    lastUpdated: null, 
+    created: 1651229300661,
+}
+//# modules
+{
+    name: "first module",
+    description: "decrripto of first module",
+    duration: 30, 
+    image: {},
+    curriculum: {}, 
+    status: "active", 
+    moduleID : "module:1", 
+    uid:'',
+    creatorUID: 1,
+    updatedUID: null,
+    lastUpdated: null, 
+    created: 1651229300661,
+}
+//# priceList collection
+{
+    priceListID: "priceList:1",
+    moduleID: "module:1",
+    price: 150,
+    end_date: 1659229900661, 
+    start_date: 1651229400661, 
+
+    creatorUID: 1,
+    updatedUID: null,
+    lastUpdated: null, 
+    created: 1651229300661,
+}
+//# cocredDetails collection
+{ 
+    uid: 1,
+    status: "unlocked", 
+    cocredBalance: 0,
+    updatedUID: 1,
+    created: 1651229500661, 
+    lastUpdated: null, 
+    asOfDate: 2651229526661, 
+    transactions: [
+        {
+            timestamp: 2651229526661,
+            amount: 2000,
+            type: "cocred",
+            reference: "cocredOrder:2",
+        },
+    ],
+}
+{ //transactionrecord
+    creatorUID: '', //?2 when parent first time opens, and does top up for child, childs wallet will get created(with his uid), but creatorUID will be parent, right?
+    created: '', // timestamp epoch ts:timestamp
+    lastUpdated: '', // timestamp epoch
+
+    asOfDate:'', // date of last update
+    transactions: [
+        {
+            timestamp: '',
+            amount: '',
+            type: 'debit', 
+            reference: '', // purchaseOrderID  
+        },
+        {
+            timestamp: '',
+            amount: '',
+            type: 'cocred', 
+            reference: '', // cocredOrderID
+        }
+    ],
+}
+//# cocredOrders collections
+{ 
+    cocredOrderID: "cocredOrder:1",
+    productID: "product:1",
+    quantity: 3,
+    amount: 900,  
+    razorpayOrderID: null,
+    razorpayPaymentID: null,
+    status: "pending",
+    error: null,
+    uid: 1,
+    creatorUID: 1,
+    updatedUID: null,
+    lastUpdated: null, 
+    created: 1651229500661,
+}
+//# purchaseOrders collection
+{
+    creatorUID: 1,
+    moduleID: "module:1",
+    priceListID: "priceList:1",
+    purchaseOrderID: "purchaseOrder:1",
+    price: 150,
+    purchaseDate: 1651229700661,
+    status: "active", 
+    expiry: 1651239700661, (purchase date + module duration) //? is it right ?
+    updatedUID: null,
+    lastUpdated: null, 
+    created: null
+}
+
+[
+    {name: "banner",url: "/xxxxx", description: "decrripto..."
+    },
+    {name: "poster",url: "/yyyyy", description: "decrripto..."
+    },
+    {name: "poster",url: "/ggggg", description: "decrripto..."
+    },
+]
+
+buisness vision:  
+stage1: basic commerce
+stage2: testimonials, 
+* layer closest to outcumes to be technolojised first !
+
+
+if user wants to buy, he can do it. by going to site.. (how to take him there? -> manually)
+user is convinced to buy by going to site.
+user is convinced more to buy by going to site.
+user is convinced much more to buy by going to site.
+
+other kids achivements we show when he is entering
+their kids data we show when he is inn so he is happy
